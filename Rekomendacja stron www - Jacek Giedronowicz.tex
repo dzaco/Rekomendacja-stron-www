@@ -25,6 +25,7 @@
 \usepackage{amssymb, amsthm,amsmath, tikz, indentfirst}
 \hyphenation{for-singiem}
 \bibliographystyle{plain}
+\usepackage{wrapfig}
 %\usepackage{showkeys}
 \newtheorem{tw}{Twierdzenie}[chapter]
 \newtheorem{np}[tw]{Przykład}
@@ -275,14 +276,155 @@ Operatory definiują zakres poszukiwań poprzez słowa i znaki kluczowe:
 Google zawiera znacznie więcej operatorów. Niektóre z nich wymienione są na stronie sites.google.com \cite{operatory-google}
 
 \chapter{Rekomendacja stron www}
-\section{Algorytm}
 Cały algorytm możemy podzielić na dwa etapy: indeksowanie i wyszukiwanie.
 Użytkownik oczekuje od aplikacji szybkiego i trafnego wyszukiwania jednak, aby tak się stało trzeba najpierw zebrać wszystkie dane i nadać im specjalną strukturę dzięki której będziemy mogli szybko znaleźć interesującą nas informacje. To właśnie nazywamy procesem indeksowania.
-\subsection{Proces indeksowania}
-\subsection*{Document}
-\subsection*{Analyzer}
-\subsection*{Struktura indeksu}
-\subsection{Proces wyszukiwania}
+
+
+\section{Proces indeksowania}
+
+\subsection{Document}
+
+\begin{wrapfigure}{R}{0.4\textwidth}
+	\centering
+	\includegraphics[width=0.3\textwidth]{img/documents.png}
+	\caption{Struktura dokumentu}
+\end{wrapfigure}
+Dokument reprezentuje stronę internetową. Jest główną jednostką indeksowania i wyszukiwania.
+Technicznie jest zbiorem (kontener typu \texttt{Set}) zawierający pola (\texttt{field}) złożone z klucza i wartości.
+Dzięki temu możemy zapisać w ustrukturyzowany sposób najważniejsze dla nas informacje, po których później będziemy wyszukiwać.
+Do wyszukiwania stron www przydatne będą takie pola jak :
+\begin{itemize}
+	\item \texttt{id} - unikalny identyfikator dokumentu
+	\item \texttt{url} - adres url strony
+	\item \texttt{path} - ścieżka do kodu html na dysku twardym
+	\item \texttt{title} - tytuł strony
+	\item \texttt{keywords} - słowa kluczowe z meta znacznika \texttt{<meta name="keywords">}
+	\item \texttt{description} - opis strony z mata znacznika\texttt{<meta name="description">}
+	\item \texttt{headers} - nagłówki ze znaczników \texttt{<h1>} do \texttt{<h6>} 
+	\item \texttt{emphasize} - wyróżnione słowa za pomocą znaczników takich jak \texttt{<em>,<b>,<strong><i>,<mark>}
+	\item \texttt{images} - informacje o obrazach dostępnych na stronie
+\end{itemize}
+
+
+\subsection{Struktura indeksu}
+
+Index jest pojedynczym katalogiem na dysku struktury drzewiastej \cite{lucene-article}. Składa się z segmentów (\texttt{segment}), dokumentów (\texttt{document}), pól (\texttt{field}), wyrażeń (\texttt{term}).
+Segmenty można traktować jak pod-indeks jednakże nie stanowią one niezależnych indeksów. 
+Liczba tworzących je plików zależy od liczby pól zawartych w indeksie.
+Wszystkie pliki należące do tego samego segmentu mają taki sam prefiks ale różnią się sufiksem. 
+
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=1\linewidth]{img/segments.png}
+	\caption{Struktura indeksu \cite{alg-on-cloud}}
+\end{figure}
+
+Wyrażenia zapisane w dokumencie (\texttt{term}) są analizowane i zapisywane w specjalnej strukturze zwanej inverted index. Polega ona na przedstawieniu relacji \texttt{document - term} w postaci tabeli przedstawionej na rysunku \ref{inverted-index}. Możemy nie niej szybko znaleźć wyrażenie i id dokumentu, który zawiera dane wyrażenie.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=1\linewidth]{img/inverted-index.jpg}
+	\caption{Struktura indeksu}
+	\label{inverted-index}
+\end{figure}
+
+Powyższy sposób pozwala nam na szybkie znalezienie interesującego nas wyrażenia - dzięki analyzerowi wyrażenia będące uosobieniem tego samego słowa, niezależnie od formy gramatycznej, zajmują jeden rekord w bazie w postaci najprostszego wyrażenia.
+
+\subsection{Analyzer}
+
+Analyzer jest mechanizmem analizowania tekstu i generowania tak zwanych \texttt{token}'ów - będącymi jednostkami leksykalnymi. Dzięki temu dla programu słowa "wyrazić, wyrażenia, wyrażenie" to jedno i to samo.
+
+Dla różnych potrzeb i co ważniejsze dla różnych języków zostały stworzone różne analyzery. Przykładowo:
+\begin{itemize}
+		\item \texttt{WhitespaceAnalyzer}\\
+	Rozdziela tekst bazując na białych znakach (spacja).
+	Przykład.
+	$$	\texttt{["This is an example term analysis test."]}$$
+	$$\downarrow$$
+	$$\texttt{["This", "is", "an", "example", "term", "analysis", "test."]}$$
+		
+	\item \texttt{SimpleAnalyzer}\\
+	Rozdziela tekst bazując na nieliterowych znakach takich jak liczby, znaki białe czy interpunkcja i zmienia je na małe znaki.
+	Przykład.
+	$$	\texttt{["This is an 1example term analysis test."]}$$
+	$$\downarrow$$
+	$$\texttt{["this", "is", "an", "example", "term", "analysis", "test"]}$$
+	
+	\item \texttt{StopAnalyzer}\\
+	Rozdziela tekst bazując na białych znakach. Usuwa interpunkcje oraz takie słowa jak 'a', 'an', 'the' itp
+	Przykład.
+	$$	\texttt{["This is an example term analysis test."]}$$
+	$$\downarrow$$
+	$$\texttt{["example", "term", "analysis", "test"]}$$
+	
+	\item \texttt{StandardAnalyzer}\\
+	Standardowy analyzer obsługujący nazwy, adresy email itp. 
+	Zmienia wszystkie znaki na małe oraz usuwa interpunkcje i zaimki/przedimki.
+	Przykład.
+	$$	\texttt{["This is an example term analysis test."]}$$
+	$$\downarrow$$
+	$$\texttt{["example", "term", "analysis", "test"]}$$
+
+
+	\item \texttt{PolishAnalyzer}\\
+	Odpowiedni analyzer dla języka polskiego. Zmienia litery na małe, usuwa interpunkcje i co najważniejsze zmienia podane wyrażenia na ich podstawową formę (o ile to możliwe bezokolicznik lub mianownika).
+	Przykład.
+	$$	\texttt{["To jest przykładowy test analizy wyrażenia."]}$$
+	$$\downarrow$$
+	$$\texttt{["przykładowy", "test", "analiza", "wyrazić"]}$$
+	
+\end{itemize}
+
+W procesie wyszukiwania będziemy musieli użyć dokładnie tego samego analyzera do przygotowania zapytania.
+
+
+\section{Proces wyszukiwania}
+
+\begin{wrapfigure}{R}{0.45\textwidth}
+	\centering
+	\includegraphics[width=1\linewidth]{img/vector-space.png}
+	\caption{VSM}
+\end{wrapfigure}
+
+Po zaindeksowaniu wszystkich dokumentów możemy je teraz przeszukiwać.
+Proces wyszukiwania przechodzi po indeksie szukając najlepszego dopasowania do naszego zapytania (\texttt{Query}), przeanalizowanego przez nasz analyzer. 
+Do punktowania (\texttt{Scoring}) wykorzystywany jest model podobieństwa TF-IDF (\texttt{TF-IDF Similarity}) implementujący model przestrzeni wektorowej (\texttt{Vector Space Model - VSM} ).
+W \texttt{VSM} im więcej razy dane słowo pojawia się w dokumencie w stosunku do frekwencji we wszystkich dokumentach tym wyżej punktowany jest.
+
+\subsection{TF-IDF Similarity}
+Podobieństwo TF-IDF (term frequency – inverse document frequency) \cite{similarity-documentation} jest metodą obliczania wagi słów w oparciu o liczbę ich wystąpień. Mierzone jest w modelu VSM, w którym zarówno dokumenty jak i zapytania reprezentowane są jako wektory ważone w przestrzeni wielowymiarowej.
+
+Załóżmy, że $t$ oznacza term oraz $d$ dokument.
+Wartość podobieństwa TF-IDF termu $t$ dla dokumentem $d$ oblicza się ze wzoru:
+\[
+	tfidf(t) = tf(t,d) \times idf(t)
+\]
+gdzie $tf(t,d)$ nazywamy frekwencją termu (\texttt{term frequency}) i wyrażamy wzorem
+\[
+	tf(t,d) = 
+	\frac{n_{t,d}}{\sum_{k} n_{k,d}}
+\]
+gdzie $n_{t,d}$ jest liczbą wystąpień termu $t$ w dokumencie $d$.
+
+$idf(t)$ nazywamy odwróconą frekwencją dokumentów (\texttt{inverse document frequency}) wyrażona wzorem
+\[
+	idf(t) = \log 
+	\frac 
+	{ |D| }
+	{ 1 + |\{ d \colon t \in d \}| }
+\]
+gdzie $|D|$ jest liczbą dokumentów a $|\{ d \colon t \in d \}|$ jest liczbą dokumentów zawierających dany term. Dodając jedynkę tj $1 + |\{ d \colon t \in d \}|$ zabezpieczamy się przed dzieleniem przez $0$. 
+
+
+Dla lepszej jakości wyszukiwań i bezpieczeństwa,  dobra wyszukiwarka nie polega tylko na podobieństwie.
+Bierze również pod uwagę czy strona znajduje się w cenionej witrynie, czy witryna jest niskiej jakości albo nawet spamuje. Takie witryny powinny być odnotowane na specjalnej liście spamerskiej a wyszukiwarka nie powinna rekomendować żadnych stron z danej witryny.
+
+Za to punktacje wysokiej jakości stron może podnieść tak zwany PageRank.
+
+\subsection{PageRank}
+Algorytm opracowany przez założyciela Google - Larry'ego Page'a i Sergey'a Brin'a \cite{google-how-search-works}
+
 \section{Dodatkowe funkcje składni zapytania}
 
 \chapter{Przedstawienie problemu i sposób jego rozwiązania}
