@@ -51,7 +51,7 @@
 \def\kt{Klasyfikacja tematyczna}
 \author{Jacek Giedronowicz}
 \nralbumu{95175}
-\title{Rekomendacja stron www za pomocą silnika Apache Lucene }
+\title{Rekomendacja stron www z silnikiem Apache Lucene }
 \kierunek{Informatyka}
 \zakres{Machine Learning}
 % Praca wykonana pod kierunkiem:
@@ -65,7 +65,7 @@
 % miesiąc i rok:
 \date{Lipiec 2020}
 %Słowa kluczowe:
-\keywords{-}
+\keywords{aplkacja webowa, wyszukiwarka, Apache Lucene}
 %Podać dziedzinę pracy wg klasyfikacji Socrates-Erasmus:
 \dziedzina{ 
 	%11.1 Matematyka
@@ -90,30 +90,30 @@
 
 \chapter{Wprowadzenie}
 
-\linia
-\begin{itemize}
-	\item ok 1-2 str
-	\item ogólne zagadnienie jak jest stosowane w praktyce (do przewidywania)
-	\item opis, że klasyfikacja jest trudna, używa się wielu metod, że jednym z podejść jest komitet klasyfikatorów, aby poprawić skuteczność
-	\item cel pracy, hipotez badawczych
-	\item krótki opis co jest w danym rozdziale
-\end{itemize}
-	
-
-\linia
+%\linia
+%\begin{itemize}
+%	\item ok 1-2 str
+%	\item ogólne zagadnienie jak jest stosowane w praktyce (do przewidywania)
+%	\item opis, że klasyfikacja jest trudna, używa się wielu metod, że jednym z podejść jest komitet klasyfikatorów, aby poprawić skuteczność
+%	\item cel pracy, hipotez badawczych
+%	\item krótki opis co jest w danym rozdziale
+%\end{itemize}
+%	
+%
+%\linia
 
 \chapter{Stan rynku}
-
-\linia
-\begin{itemize}
-	\item przede wszystkim zdefiniowanie problemu biznesowego i jego uzasadnienie.
-	\item Jakie są wyszukiwarki?
-	\item Jakie mają opcje?
-	\item strony spamerskie (zaburzają ranking)
-	\item hint: zobacz prace lic o serwisie otomoto
-\end{itemize}
-
-\linia
+%
+%\linia
+%\begin{itemize}
+%	\item przede wszystkim zdefiniowanie problemu biznesowego i jego uzasadnienie.
+%	\item Jakie są wyszukiwarki?
+%	\item Jakie mają opcje?
+%	\item strony spamerskie (zaburzają ranking)
+%	\item hint: zobacz prace lic o serwisie otomoto
+%\end{itemize}
+%
+%\linia
 
 Na rynku istnieje wiele wyszukiwarek internetowych, lecz mało kto potrafi wymienić więcej niż pięć.
 Internet zdominowała firma Google. Nawet takie znane wyszukiwarki jak Bing od Microsoft'u czy Yahoo mają zaledwie kilka procent udziału, który przedstawia się następująco:
@@ -422,43 +422,201 @@ Bierze również pod uwagę czy strona znajduje się w cenionej witrynie, czy wi
 
 Za to punktacje wysokiej jakości stron może podnieść tak zwany PageRank.
 
+\newpage
 \subsection{PageRank}
-Algorytm opracowany przez założyciela Google - Larry'ego Page'a i Sergey'a Brin'a \cite{google-how-search-works}
+%\begin{wrapfigure}{R}{0.45\textwidth}
+%	\centering
+%	\includegraphics[width=1\linewidth]{img/pagerank-graph.png}
+%	\caption{Przykład grafu skierowanego }
+%\end{wrapfigure}
 
-\section{Dodatkowe funkcje składni zapytania}
+Algorytm opracowany przez założyciela Google - Larry'ego Page'a i Sergey'a Brin'a \cite{google-how-search-works}. 
+Kluczową ideą jest rozważanie hiperłączy z jednej strony internetowej na drugą.
+Im więcej linków prowadzi do danej strony, tym ważniejsze ma znaczenie. 
+Innymi słowy, jeśli strona internetowa jest wskazywana przez inne, ważne strony, to jest to również ważna strona.
 
-\chapter{Przedstawienie problemu i sposób jego rozwiązania}
-\linia
+Sieć połączeń stron hiperłączami tworzy graf skierowany.
+\begin{de}
+	$G := (V,E)$ nazywamy grafem skierowanym. 
+	Zbiór $V \neq \emptyset$ jest zbiorem elementów zwanych wierzchołkami.
+	Zbiór $E \subseteq 
+	\big\{
+		\{ u,v \} \colon u,v \in V
+	 \big\}$
+	 nazywamy zbiorem krawędzi skierowanych z wierzchołka $u \in V$ do wierzchołka $v \in V$
+	 oraz $\deg(u)$ liczbą krawędzi wychodzących z wierzchołka $u \in V$.
+\end{de}
+
+\begin{de}
+	Niech $u$ będzie stroną internetową. 
+	Wtedy $F_u$ będzie zbiorem stron, na które $u$ wskazuje oraz $B_u$ zbiorem stron, które wskazują na $u$.
+	\begin{figure}[H]
+		\centering
+		\includegraphics[width=0.4\linewidth]{img/pagerank-link.png}
+		\caption{Zbiory $F_u$ i $B_u$}
+	\end{figure}
+	
+	PageRank $R$ strony $u$ jest zdefiniowany następująco:
+	\[
+	R(u) = 
+	\frac{1-d}{N} +
+	d \cdot 
+	\sum\limits_{i=1}^{|B_u|}
+	\frac{R(B_i)}
+	{\deg(B_i)}
+	\]
+	gdzie $N$ jest liczbą dokumentów oraz $d$ jest parametrem wybranym eksperymentalnie ( zwykle $d=0.85$) nazywany współczynnikiem tłumienia (\textit{Damping factor}).
+	Suma wartości wektora $R = \big[ R_{u_1}, R_{u_2}, \dots R_{u_N} \big]$ jest równa $1$, 
+	tj. $\sum_{i=0}^{N} R_{u_i} = 1$.
+	
+\end{de}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.4\linewidth]{img/pagerank-link2.png}
+	\caption{Przykład uproszczonego PageRank}
+\end{figure}
+
+Powstaje problem typu \textit{Cold Start} - do obliczeń PageRank danej strony potrzebujemy PageRanku stron do niej podlinkowanych, gdzie początkowo żadna ze stron nie posiada wyliczonego rankingu.
+
+Wartości te można wyliczyć w sposób iteracyjny.
+Przyjmijmy początkowy rozkład prawdopodobieństwa dla czasu $t = 0$ :
+\[
+	R(u;0) = \frac{1}{N}
+\]
+Następnie nasz wzór z czasem $t$: 
+	\[
+		R(u ; t + 1) = 
+		\frac{1-d}{N} +
+		d \cdot 
+		\sum\limits_{b_i \in B_u}
+		\frac{R(b_i ; t)}
+		{\deg(b_i)}
+\]
+jest obliczany iteracyjnie dla każdej strony $u$ należącej do grafu,
+gdzie $R(p ; t)$ jest rankingiem strony $p$ w czasie $t$ oraz $d$ jest współczynnikiem tłumienia.
+Iteracje możemy przerwać gdy wartości PageRank przestaną się zmieniać w stopni znacznym tj.
+$\big| R(t+1) - R(t) \big| < \epsilon$ dla pewnego ustalonego $\epsilon > 0$.
+
+Założyciele google'a w swoim raporcie \cite{pagerank-report} opisali, że do obliczenia PageRank'u dla 322 milinów stron wystarczyły 52 iteracje. Dla o połowę mniejszej bazy 42 iteracje, wyciągając wnioski, że współczynnik skalowania jest równy $\log N$.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.6\linewidth]{img/pagerank-iteracja}
+	\caption{Iteracje w obliczeniach PageRank}
+\end{figure}
+
+Macierz PageRank jest łańcuchem Markowa, gdzie z teorii Markowa, jego wartość $R(u)$ jest prawdopodobieństwem przejścia ze strony $u$ z powrotem do strony $u$ po dużej liczbie przejść w błądzeniu losowym (\textit{Random Walk}).
+
+\begin{de}
+	Łańcuchem Markowa o zbiorze stanów $V$ nazywamy ciąg zmiennych losowych $X_0, X_1,X_2, \dots$ takich, że 
+	\[
+	\mathbb{P} 
+	\big(
+	X_n = v_n \big| X_{n-1} = v_{n-1} \wedge
+	\dots
+	X_0 = v_0
+	\big) = 
+	\mathbb{P} 
+	\big(
+	X_n = v_n \big| X_{n-1} = v_{n-1}\big)
+	\]
+	Oznacza to, że prawdopodobieństwo przejścia jest niezależne od $n$.
+\end{de}
+
+
+
+\subsection{Power Method}
+
+Dla szybszego niwelowania błędu w iteracji do obliczania PageRank wykorzystano algorytm Power Method bazujący na wartościach własnych macierzy.
+
+Niech macierz $\mathcal{M} = \big[ \mathcal{M}_{i,j} \big]_{}$ będzie macierzą przejścia zdefiniowaną następująco:
+$$\mathcal{M}_{i,j} = 
+\left\{ 
+\begin{array}{ll}
+	\frac{1}{\deg(p_i) }	 & 	\text{jeśli strona $p_i$ jest podlinkowana do $p_j$}	\\
+	0								&	\text{w p.p}
+\end{array}
+\right.$$
+
+oraz PageRank $R$ będzie rozkładem prawdopodobieństwa tj. $\big|R\big| = 1$ i  $\mathbf{E}R = 1$ gdzie $\mathbf{E}$ jest macierzą jedynek.
+Wtedy \textit{Power Method PageRank} jest dany wzorem: 
+\[
+	R = 
+	\left( 
+		d \mathcal{M} + 
+		\frac{1 -d}{N} \mathbf{E}
+	\right)
+	R
+\]
+
+\subsection{Dangling Nodes Problem}
+
+Podczas obliczania PageRank pojawia się \textit{Dangling Nodes Problem} czyli problem stron, które nie posiadają linków wychodzących. 
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.4\linewidth]{img/pagerank-dangling-node}
+	\caption{Przykład grafu z Dangling Nodes}
+\end{figure}
+
+Stawiają kłopotliwe pytanie dla modelu, gdzie ich wartość powinna zostać dalej dystrybuowana.
+Istnieją dwa rozsądne rozwiązania:
 \begin{itemize}
-	\item Przede wszystkim przedstawienie tego problemu, który będzie opisany w pracy
-	\item problem przedstawiony w pracy może być jednym z podproblemów ogólnego problemu biznesowego
-	\item opis metod lub algorytmów np w postaci pseudokodu lub schematów 
-	\item uzasadnienie użytych metod
-	\item testy kilku parametrów, przygotowanie danych itd.
+	\item \textbf{Usunąć na czas obliczeń}
+	\begin{figure}[H]
+		\centering
+		\includegraphics[width=0.4\linewidth]{img/pagerank-without-dangling-node}
+		\caption{Przykład usuwania Dangling Nodes}
+	\end{figure}
+Skoro Dangling Nodes nie wpływa bezpośrednio na PageRank żadnej innej strony, możemy je po prostu wykluczyć z naszych obliczeń. 
+Takie strony stanowią dużą część grafu stąd usunięcie ich z obliczeń może okazać się korzystne dla czasu realizacji.
+	
+	\item \textbf{Dodać tymczasowy wierzchołek}
+		\begin{figure}[H]
+		\centering
+		\includegraphics[width=0.4\linewidth]{img/pagerank-withextra-dangling-node}
+		\caption{Przykład usuwania Dangling Nodes}
+	\end{figure}
 \end{itemize}
+Na czas obliczeń możemy dodać tymczasowy wierzchołek, który będzie połączony dwukierunkowo ze wszystkimi wierzchołkami w grafie.
+%TODOD dzieki temu... co ? jaki jest jego pagerank?
 
-\linia
+%chapter{Przedstawienie problemu i sposób jego rozwiązania}
+%\linia
+%\begin{itemize}
+%	\item Przede wszystkim przedstawienie tego problemu, który będzie opisany w pracy
+%	\item problem przedstawiony w pracy może być jednym z podproblemów ogólnego problemu biznesowego
+%	\item opis metod lub algorytmów np w postaci pseudokodu lub schematów 
+%	\item uzasadnienie użytych metod
+%	\item testy kilku parametrów, przygotowanie danych itd.
+%\end{itemize}
+%
+%\linia
 
 \chapter{Funkcjonalność zaimplementowanego systemu}
-\linia
-\begin{itemize}
-	\item opis jakie funkcjonalności będzie miał system
-	\item w jaki sposób dana funkcjonalność przyczyni się do rozwiązania problemu
-\end{itemize}
+%\linia
+%\begin{itemize}
+%	\item opis jakie funkcjonalności będzie miał system
+%	\item w jaki sposób dana funkcjonalność przyczyni się do rozwiązania problemu
+%\end{itemize}
+%
+%\linia
+\section{Wyszukiwarka}
+\section{Wyszukiwanie}
+\section{Podstawowe operatory}
 
-\linia
 
 \chapter{Implementacja oraz użyte technologie}
-\linia
-\begin{itemize}
-	\item dokładnie jak zostało to wszystko implementowane
-	\item opis architektury
-	\item jaka platforma, diagram klas, jaka funkcjonalność jest w jakiej klasie/module/package
-	\item opis głównych metod (nie opisujemy wszystkich metod)
-	\item parametry jakie ma aplikacja, opis instalacji
-\end{itemize}
-
-\linia
+%\linia
+%\begin{itemize}
+%	\item dokładnie jak zostało to wszystko implementowane
+%	\item opis architektury
+%	\item jaka platforma, diagram klas, jaka funkcjonalność jest w jakiej klasie/module/package
+%	\item opis głównych metod (nie opisujemy wszystkich metod)
+%	\item parametry jakie ma aplikacja, opis instalacji
+%\end{itemize}
+%
+%\linia
 \section{Java}
 \subsection{Apache Lucene}
 \section{Spring Boot}
@@ -470,25 +628,29 @@ Algorytm opracowany przez założyciela Google - Larry'ego Page'a i Sergey'a Bri
 
 
 \chapter{Przypadki użycia}
-\linia
-\begin{itemize}
-	\item co dokładnie trzeba zrobić, aby zrealizować daną funkcjonalność
-	\item zrzuty ekranu
-\end{itemize}
-\linia
+%\linia
+%\begin{itemize}
+%	\item co dokładnie trzeba zrobić, aby zrealizować daną funkcjonalność
+%	\item zrzuty ekranu
+%\end{itemize}
+%\linia
+\section{Uruchomienie aplikacji}
+\section{Wyszukiwanie stron}
+\section{Ustawianie filtrów}
+
 
 \chapter{Podsumowanie}
-\linia
-\begin{itemize}
-	\item ok 1-2 str
-	\item cel pracy udało się osiągnąć
-	\item w jaki sposób udało się osiągnąć cel z rozdziału 1 (w których rozdziałach jest to opisane)
-	\item napotkane problemy
-	\item w jaki sposób można aplikację/system udoskonalić
-\end{itemize}
+%\linia
+%\begin{itemize}
+%	\item ok 1-2 str
+%	\item cel pracy udało się osiągnąć
+%	\item w jaki sposób udało się osiągnąć cel z rozdziału 1 (w których rozdziałach jest to opisane)
+%	\item napotkane problemy
+%	\item w jaki sposób można aplikację/system udoskonalić
+%\end{itemize}
+%
+%\linia
 
-\linia
-\cite{google-power-searching}
 
 \bibliography{bibliografia} 
 \bibliographystyle{ieeetr}
